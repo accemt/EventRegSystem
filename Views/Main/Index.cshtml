@@ -1,0 +1,103 @@
+﻿@model List<TimeTable>
+@{
+    ViewData["Title"] = "Регистрации на мероприятия";
+    Random R = new Random();
+    string CurrEventName, CurrEventDT = "";
+}
+
+ <style>
+   .EventForm { 
+    position: relative; /* Абсолютное позиционирование */
+    left: 20px; /* Положение от левого края */
+    top: 60px; /* Положение от верхнего края */
+    width: 100%; /* Ширина блока */
+    background: #e0e0e0; /* Цвет фона */
+    border: 1px solid #000; /* Параметры рамки */
+    padding: 5px; /* Поля вокруг текста */
+    display: none;
+    text-align: left;
+   }
+   .content { 
+    position: relative; /* Абсолютное позиционирование */
+    left: 0; /* Положение от левого края */
+    top: 20px; /* Положение от верхнего края */
+    padding: 3px; /* Поля вокруг текста */
+    padding-right: 60px; /* Отступ справа */
+   }
+  </style>
+
+<div class="text-center">
+    <h1 class="display-4">Регистрация на мероприятия по волейболу</h1>
+
+    @if (Model != null)
+    {
+        <table><tr valign=top><td>
+        <div style="text-align: left; text-size: 26px; font-weight: bold;">Список мероприятий (@Model.Count() шт):</div>
+        <table style="border: 0px solid">
+            <tr valign=center style="text-size: 14px; font-weight: bold;"><td >ID</td><td>Мероприятие</td><td>Дата-время</td><td>Места: свободных/всего</td><td style="padding: 25px">Тренер:</td></tr>
+            @foreach (var tt in @Model)
+            {
+                int FreeSeatsCount = tt.MembersCount;
+                string HeadClient = "Нет";
+                if (tt.TimeTableClients != null) FreeSeatsCount -= tt.TimeTableClients.Count();
+                if (tt.HeadClient != null) HeadClient = tt.HeadClient.Name;
+                
+                <tr valign=top style="height: 50px"><td style="width:42px;">@tt.EventId &nbsp&nbsp</td><td> @tt.Name &nbsp&nbsp</td>
+                    <td style="width: 175px"> @tt.EventDateTime &nbsp&nbsp</td>
+                                <td style="width:52px">@FreeSeatsCount/@tt.MembersCount</td>
+                                <td>@HeadClient</td>
+                                <td>  
+                    <div class="tab">
+
+                    <button class="tablinks" onclick="openForm('EventForm', '@tt.EventId', '@tt.EventDateTime.ToString("yyyy-MM-dd")', '@tt.EventDateTime.ToString("HH:mm")', '@tt.Name')">Записаться</button>
+                    </div>
+                </td>
+
+                </tr>
+            }
+        </table>
+        </td>
+        <td>
+            <div id="EventForm" class="EventForm">
+                      <div id ="EFDiv"></div>
+                        <form method="post" >
+                        <input name="TimeTableId" id="EventId" type="hidden" />
+                        <div class="content"><label>Ваше Имя*:</label> <input name="ClientName" type="text" /><br/></div>
+                        <div class="content"><label>Ваш телефон*:</label> <input name="phone" type="text" value="+79" /><br/></div>
+                        <div class="content"><label>Ваш e-mail:</label> <input name="email" type="text" /><br/></div>
+                        <div class="content"><label>Комментарий:</label> <input id="EventComment" name="comment" type="text" value="" /><br/></div>
+                        <div class="content" style="display: none"><label>Дата-время:</label>
+                        <input name="RegDate" id="EventDate" type="date" value="" readonly />
+                        <input name="RegTime" id="EventTime" type="time" value="" readonly /><br /></div>
+
+                        <div class="content" style="text-align: center"><input style="text-size: 14px; font-weight: bold; background-color: #63DD8D" type="submit" value="Записаться!" /><br/></div>
+                    </form><br/>
+            </div>
+
+        </td>
+        </tr></table>
+        <p>---</p>
+
+    }
+</div>
+
+@if (ViewBag.RegResult == 1) {
+        <script>alert('Вы уже зареганы на это мероприятие!')</script>
+}
+
+<script>
+function openForm(cityName, id, date, time, name) {
+    document.getElementById('EventId').value = id;
+    document.getElementById('EventDate').value = date;
+    document.getElementById('EventTime').value = time;
+    
+    var divhtml = '<b>Форма записи на ' + name + ' ' + date + ' в ' + time + ':</b>';
+    divhtml += '<a style="margin-left: 10px; text-align: right;" onclick="openForm(\'EventForm\')" href = #>Скрыть</a>';
+    document.getElementById('EFDiv').innerHTML = divhtml;
+
+    if (document.getElementById(cityName).style.display == "block")
+        	document.getElementById(cityName).style.display = "none";
+        else 
+        	document.getElementById(cityName).style.display = "block";
+}
+</script>

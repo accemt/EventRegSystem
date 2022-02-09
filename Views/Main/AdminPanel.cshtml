@@ -1,0 +1,190 @@
+﻿@model List<Client>
+@{
+    ViewData["Title"] = "Панель администратора";
+    Random R = new Random();
+    List<TimeTable> TT = ViewBag.TimeTableList;
+    Console.WriteLine("AER: " + ViewBag.AddEventResult + "|"+TT.Count());
+}
+ <style>
+   .EventForm { 
+    position: relative; /* Абсолютное позиционирование */
+    left: 20px; /* Положение от левого края */
+    top: 10px; /* Положение от верхнего края */
+    width: 100%; /* Ширина блока */
+    background: #e0e0e0; /* Цвет фона */
+    border: 1px solid #000; /* Параметры рамки */
+    padding: 5px; /* Поля вокруг текста */
+    text-align: left;
+    display: none;
+   }
+   .content { 
+    position: relative; /* Абсолютное позиционирование */
+    left: 0; /* Положение от левого края */
+    top: 20px; /* Положение от верхнего края */
+    padding: 3px; /* Поля вокруг текста */
+    padding-right: 60px; /* Отступ справа */
+   }
+  </style>
+
+<div class="text-center">
+    <h3>Панель администратора</h2>
+    <div class="text-center">
+
+    @if (TT != null)
+    {
+        <table><tr valign=top><td>
+        <div style="text-align: left; text-size: 26px; font-weight: bold;">Управление играми (@TT.Count() шт):</div>
+        <table style="border: 0px solid">
+            <tr valign=center style="text-size: 16px; margin-bottom: 150px; font-weight: bold;"><td style="width: 20px"></td><td >ID</td><td>Мероприятие</td><td>Дата-время</td><td>Места: свободных/всего</td><td style="padding: 25px">Тренер:</td></tr>
+            @foreach (var tt in @TT)
+            {
+                int FreeSeatsCount = tt.MembersCount;
+                string HeadClient = "Нет", str2;
+                str2 = "PlayersList" + tt.EventId;
+                if (tt.TimeTableClients != null) {
+                    FreeSeatsCount -= tt.TimeTableClients.Count();
+                }
+                if (tt.HeadClient != null) HeadClient = tt.HeadClient.Name;
+
+                <tr valign=top style="font-weight: bold; border: 1px solid; border-left: 1px solid">
+                    <td style="width: 20px"><a href="#" onclick="openPlayersList('@str2')"><img src="~/images/Plus.png" style="height: 20px; width: 20px;"></a></td>
+                    <td style="width:42px;">@tt.EventId &nbsp&nbsp</td>
+                    <td> @tt.Name &nbsp&nbsp</td>
+                    <td style="width: 175px;"> @tt.EventDateTime &nbsp&nbsp</td>
+                    <td style="width:52px;">@FreeSeatsCount/@tt.MembersCount</td>
+                    <td>@HeadClient</td>
+                    <td>
+                            <button class="tablinks" onClick="document.location = '?DeleteEventId=@tt.EventId'">Удалить</button>
+                            <button class="tablinks" onclick="updateForm('AddEventForm', 'AddEventFormInfo', '@tt.EventId', '@tt.Name', '@tt.MembersCount', '@tt.HeadClient.phone', '@tt.EventDateTime.ToString("yyyy-MM-dd")', '@tt.EventDateTime.ToString("HH:mm")')">Изменить</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan=6>
+                    <table id="@str2" style="display: none; margin-left: 25px; border: 1px dashed; width: 100%">
+                    @{
+                        int i = 1;
+                        if (tt.TimeTableClients.Count() == 0) {
+                            <tr><td align="left" style="width: 30%">Записей нет.</td></tr>
+                        }
+                        foreach (var player in tt.TimeTableClients) {
+                            <tr valign=top align="left">
+                                <td align="left" style="width: 30%">@i. @player.Client.Name</td><td style="padding-right: 25px">@player.Client.phone</td><td style="width: 125px">@player.Comment</td>
+                                <td>
+                                    <a class="tablinks" href="?DeletePlayerId=@player.ClientId&DeleteEventId=@tt.EventId">Удалить</a>
+                                </td>    
+        
+                            </tr>
+                            i++;
+                        }
+                        
+                     }
+                     </table>
+                     </td>
+                </tr>
+                <tr style="height: 15px"></tr>
+            }
+        </table>
+        </td>
+        <td>
+            <div id="AddEventForm" class="EventForm">
+                      <div id ="EFDiv"></div>
+                        <form id="AddEventFormF" method="post" action="/Main/APAddEvent">
+                        <input name="EventId" id="EventId" type="hidden" />
+                        <div class="content"><label>Название мероприятия*:</label> <input id="EvName" name="Name" type="text" /><br/></div>
+                        <div class="content"><label>Количество мест*:</label> <input id="EvMembersCount" name="MembersCount" type="number" value="16" /><br/></div>
+                        <div class="content"><label>Тел. отв-го:</label> <input id="EvHeadClientPhone" name="HeadClientPhone" type="text" value="+7913" /><br/></div>
+                        <div class="content"><label>Дата-время:</label>
+                        <input name="EventDate" id="EvDate" type="date" value="" />
+                        <input name="EventTime" id="EvTime" type="time" value="" /><br /></div>
+
+                        <div class="content" style="text-align: center"><input id="AddEventFormButton" style="text-size: 14px; font-weight: bold; background-color: #63DD8D" type="submit" value="Добавить" /><br/></div>
+                    </form><br/>
+            </div>
+            <div id="AddEventFormInfo" style="margin-top: 45px; width: 400px">
+                Для добавления или удаления мероприятия, нажмите соответствующую кнопку.<br/>
+                <button class="" style="" onclick="openForm('AddEventForm', 'AddEventFormInfo')">Добавить игру</button>
+            </div>
+
+        </td>
+        </tr></table>
+        <p>---</p>
+
+    }
+</div>
+
+    <form method="post" >
+        <label>ID:</label>
+        <input name="Id" type="number" value=@R.Next(100) /><br/>
+        <label>Имя:</label>
+        <input name="Name" type="text" /><br/>      
+        <label>RegDate:</label>
+        <input name="RegDate" type="date" />
+        <input name="RegTime" type="time" /><br />
+
+        <input type="submit" value="Отправить" />
+    </form>
+
+    @if (Model != null)
+    {
+        <p><b>Клиенты (@Model.Count() шт):</b></p>
+        <table style="border: 1px solid">
+            @foreach (var u in @Model)
+            {
+                <tr><td style="border:4px solid width:42px">@u.Id &nbsp&nbsp</td><td style="border:2px solid"> @u.Name &nbsp&nbsp</td> <td>@u.RegDate</td></tr>
+            }
+        </table>
+        <p>---</p>
+
+    }
+</div>
+
+@if (ViewBag.AddEventResult == 1) {
+        <script>alert('Тренер с таким телефоном не найден!')</script>
+}
+
+<script>
+function openForm(FormName, FormNameInfo) {
+    document.getElementById(FormName).style.display = "block";
+    document.getElementById(FormNameInfo).style.display = "none";
+
+    document.getElementById('AddEventFormButton').value = "Добавить";
+    document.getElementById('AddEventFormF').action = "/Main/APAddEvent";
+    FormBeginHTML('Добавить');
+}
+
+function hideForm(FormName, FormNameInfo) {
+    document.getElementById(FormName).style.display = "none";
+    document.getElementById(FormNameInfo).style.display = "block";
+}
+
+function updateForm(FormName, FormNameInfo, EventId, EvName, EvMembersCount, EvHeadClientPhone, EvDate, EvTime) {
+    document.getElementById(FormName).style.display = "block";
+    document.getElementById(FormNameInfo).style.display = "none";
+
+    document.getElementById('AddEventFormButton').value = "Обновить";
+    document.getElementById('EventId').value = EventId;
+    document.getElementById('EvName').value = EvName;
+    document.getElementById('EvMembersCount').value = EvMembersCount;
+    document.getElementById('EvHeadClientPhone').value = EvHeadClientPhone;
+    document.getElementById('EvDate').value = EvDate;
+    document.getElementById('EvTime').value = EvTime;
+
+    document.getElementById('AddEventFormF').action = "/Main/APUpdateEvent"; 
+    FormBeginHTML('Обновить');
+    //alert(FormName);
+
+}
+
+function FormBeginHTML(str) {
+    var divhtml = '<b>' + str + ' игру:</b>';
+    divhtml += '<a style="margin-left: 300px; text-align: right;" onclick="hideForm(\'AddEventForm\', \'AddEventFormInfo\')" href = #>Скрыть</a>';
+    document.getElementById('EFDiv').innerHTML = divhtml;
+}
+
+function openPlayersList(str2) {
+    if (document.getElementById(str2).style.display == "block")
+        document.getElementById(str2).style.display = "none";
+    else
+        document.getElementById(str2).style.display = "block"
+}
+</script>
